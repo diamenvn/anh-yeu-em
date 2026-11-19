@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anh yêu em rất nhiều ❤</title>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body { background: radial-gradient(circle at 50% 45%, #2b0b26 0%, #12040f 60%, #060107 100%); touch-action: none; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .msg {
+    position: fixed; left: 0; right: 0; bottom: 7vh;
+    display: flex; flex-direction: column; align-items: center;
+    pointer-events: none; user-select: none; text-align: center; line-height: 1.1;
+    font-family: "Dancing Script", "Brush Script MT", "Segoe Script", cursive;
+    font-weight: 700; color: #fff; font-size: clamp(1.8rem, 7vmin, 3.2rem);
+    text-shadow: 0 0 14px rgba(255, 60, 120, .9), 0 0 34px rgba(255, 60, 120, .55);
+  }
+  .msg small { font-size: .72em; color: #ffd6e5; }
+  .hint {
+    position: fixed; top: 14px; width: 100%; text-align: center;
+    color: rgba(255, 190, 215, .5); font: .8rem "Segoe UI", Arial, sans-serif;
+    letter-spacing: 1px; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hint">Kéo để xoay trái tim ❤</div>
+<div class="msg"><span>Anh yêu em</span><small>rất nhiều</small></div>
+
+<script>
+(() => {
+  const c = document.getElementById('c');
+  const g = c.getContext('2d');
+  let W, H;
+
+  // Lấy mẫu các điểm gần bề mặt trái tim 3D: (x² + 9/4·y² + z² − 1)³ − x²z³ − 9/80·y²z³ = 0
+  const pts = [];
+  const N = window.innerWidth < 600 ? 2600 : 4200;
+  while (pts.length < N) {
+    const x = (Math.random() * 2 - 1) * 1.3;
+    const y = (Math.random() * 2 - 1) * 0.8;
+    const z = (Math.random() * 2 - 1) * 1.4;
+    const f = Math.pow(x * x + 2.25 * y * y + z * z - 1, 3) - x * x * z ** 3 - 0.1125 * y * y * z ** 3;
+    if (f < 0 && f > -0.03) pts.push({ x, y, z: z - 0.13, ph: Math.random() * 6.28, r: 0.7 + Math.random() * 0.9 });
+  }
+
+  // 8 mức màu theo độ sâu: xa thì tối, gần thì sáng
+  const shades = Array.from({ length: 8 }, (_, i) =>
+    `hsl(${345 - i * 1.5}, ${90 + i}%, ${32 + i * 7}%)`);
+
+  let ang = 0, drag = false, lastX = 0, vel = 0.012, t = 0, dpr = 1;
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    c.width = W * dpr; c.height = H * dpr;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function loop() {
+    t += 0.016;
+    g.clearRect(0, 0, W, H);
+    if (!drag) vel += (0.012 - vel) * 0.02;
+    ang += vel;
+
+    const b = Math.pow((Math.sin(t * 2.6) + 1) / 2, 7);
+    const S = Math.min(W, H) * 0.3 * (1 + 0.08 * b);
+    const cx = W / 2, cy = H * 0.44;
+    const ca = Math.cos(ang), sa = Math.sin(ang);
+
+    for (const p of pts) {
+      const xr = p.x * ca - p.y * sa;
+      const d  = p.x * sa + p.y * ca;          // độ sâu
+      const k  = 4 / (4 + d);
+      const sx = cx + xr * S * k;
+      const sy = cy - p.z * S * k + Math.sin(t * 2 + p.ph) * 0.8;
+      const lvl = Math.max(0, Math.min(7, ((d + 0.9) / 1.8 * 7) | 0));
+      g.fillStyle = shades[7 - lvl];
+      g.beginPath();
+      g.arc(sx, sy, p.r * k * (1.1 + b * 0.5), 0, 6.283);
+      g.fill();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  addEventListener('pointerdown', e => { drag = true; lastX = e.clientX; });
+  addEventListener('pointermove', e => { if (drag) { vel = (e.clientX - lastX) * 0.012; ang += vel; lastX = e.clientX; } });
+  addEventListener('pointerup', () => { drag = false; });
+  addEventListener('resize', resize);
+
+  resize();
+  loop();
+})();
+</script>
+<script src="music.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anh yêu em rất nhiều ❤</title>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #08000a; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .msg {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding-bottom: 3vmin; pointer-events: none; user-select: none;
+    font-family: "Dancing Script", "Brush Script MT", "Segoe Script", cursive;
+    font-weight: 700; color: #fff; text-align: center; line-height: 1.15;
+    font-size: clamp(2rem, 9vmin, 4rem);
+    text-shadow: 0 0 6px rgba(80, 0, 30, .95), 0 0 18px rgba(255, 60, 120, .9), 0 0 36px rgba(255, 60, 120, .6);
+  }
+  .msg small { font-size: .75em; color: #ffe0ec; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="msg"><span>Anh yêu em</span><small>rất nhiều</small></div>
+
+<script>
+(() => {
+  const c = document.getElementById('c');
+  const g = c.getContext('2d');
+  const letters = 'ANHYÊUEM❤'.split('');
+  const FS = 18;
+  let W, H, dpr, drops = [], t = 0, last = 0;
+
+  const hp = a => ({
+    x: 16 * Math.sin(a) ** 3,
+    y: -(13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a))
+  });
+
+  // Đường viền trái tim (toạ độ theo pixel thật của canvas)
+  function heartPath(cx, cy, s) {
+    const p = new Path2D();
+    for (let i = 0; i <= 80; i++) {
+      const q = hp(i / 80 * Math.PI * 2);
+      const x = (cx + q.x * s) * dpr, y = (cy + (q.y - 2.5) * s) * dpr;
+      i ? p.lineTo(x, y) : p.moveTo(x, y);
+    }
+    p.closePath();
+    return p;
+  }
+
+  function build() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    c.width = W * dpr; c.height = H * dpr;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drops = Array.from({ length: Math.ceil(W / FS) }, () => Math.random() * (H / FS));
+    g.fillStyle = '#08000a'; g.fillRect(0, 0, W, H);
+  }
+
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (now - last < 45) return;          // ~22 khung hình/giây cho giống mưa chữ
+    last = now; t += 0.045;
+
+    const b = Math.pow((Math.sin(t * 2.6) + 1) / 2, 7);
+    const s = Math.min(W, H) / 38 * (1 + 0.07 * b);
+    const path = heartPath(W / 2, H / 2, s);
+
+    g.fillStyle = 'rgba(8,0,10,.09)';
+    g.fillRect(0, 0, W, H);
+
+    // nền hồng rất nhẹ bên trong trái tim
+    g.save();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.fillStyle = 'rgba(255,45,107,.012)';
+    g.fill(path);
+    g.restore();
+
+    g.font = `bold ${FS}px "Courier New", monospace`;
+    g.textBaseline = 'top';
+    for (let i = 0; i < drops.length; i++) {
+      const x = i * FS, y = drops[i] * FS;
+      const ch = letters[(Math.random() * letters.length) | 0];
+      const inside = g.isPointInPath(path, (x + FS / 2) * dpr, (y + FS / 2) * dpr);
+      g.fillStyle = inside ? '#ffa3c4' : 'rgba(105,25,68,.38)';
+      g.shadowColor = inside ? '#ff2d6b' : 'transparent';
+      g.shadowBlur = inside ? 12 : 0;
+      g.fillText(ch, x, y);
+      g.shadowBlur = 0;
+      if (y > H && Math.random() > 0.93) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+
+  addEventListener('resize', build);
+  build();
+  requestAnimationFrame(frame);
+})();
+</script>
+<script src="music.js"></script>
+</body>
+</html>

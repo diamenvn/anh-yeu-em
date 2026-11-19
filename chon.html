@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chọn trái tim</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh; padding: 32px 16px 48px;
+    background: #14060f; color: #ffe3ec;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+  h1 { text-align: center; font-size: 1.6rem; margin-bottom: 6px; }
+  .sub { text-align: center; color: #c58aa4; margin-bottom: 28px; font-size: .95rem; }
+  .grid {
+    max-width: 1000px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;
+  }
+  .card {
+    display: block; text-decoration: none; color: inherit;
+    background: #1f0b17; border: 1px solid #3a1a2b; border-radius: 12px; overflow: hidden;
+    transition: border-color .2s, transform .2s;
+  }
+  .card:hover, .card:focus-visible { border-color: #ff2d6b; transform: translateY(-3px); outline: none; }
+  .shot { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: #000; }
+  .shot iframe {
+    position: absolute; top: 0; left: 0; width: 400%; height: 400%;
+    border: 0; transform: scale(.25); transform-origin: 0 0; pointer-events: none;
+  }
+  .info { padding: 12px 14px 14px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .name { font-weight: 600; }
+  .file { color: #c58aa4; font-size: .8rem; }
+</style>
+</head>
+<body>
+  <h1>Chọn trái tim</h1>
+  <p class="sub">Bấm vào kiểu bạn thích để mở. Gửi link của kiểu đó cho người yêu.</p>
+  <div class="grid">
+    <a class="card" href="index.html">
+      <div class="shot"><iframe src="index.html" loading="lazy" title="Tim đập cổ điển"></iframe></div>
+      <div class="info"><span class="name">Tim đập cổ điển</span><span class="file">index.html</span></div>
+    </a>
+    <a class="card" href="tim-hat.html">
+      <div class="shot"><iframe src="tim-hat.html" loading="lazy" title="Tim hạt sáng"></iframe></div>
+      <div class="info"><span class="name">Tim hạt sáng</span><span class="file">tim-hat.html</span></div>
+    </a>
+    <a class="card" href="tim-neon.html">
+      <div class="shot"><iframe src="tim-neon.html" loading="lazy" title="Tim neon"></iframe></div>
+      <div class="info"><span class="name">Tim neon</span><span class="file">tim-neon.html</span></div>
+    </a>
+    <a class="card" href="tim-mua-chu.html">
+      <div class="shot"><iframe src="tim-mua-chu.html" loading="lazy" title="Mưa chữ tạo hình trái tim"></iframe></div>
+      <div class="info"><span class="name">Mưa chữ thành tim</span><span class="file">tim-mua-chu.html</span></div>
+    </a>
+    <a class="card" href="tim-3d.html">
+      <div class="shot"><iframe src="tim-3d.html" loading="lazy" title="Tim 3D xoay"></iframe></div>
+      <div class="info"><span class="name">Tim 3D xoay</span><span class="file">tim-3d.html</span></div>
+    </a>
+  </div>
+</body>
+</html>
