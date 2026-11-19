@@ -31,6 +31,13 @@
       animation:nhacBeat 1.3s ease-in-out infinite}
     #nhac-ov .t{font-size:clamp(1.1rem,4.5vmin,1.6rem);font-weight:600}
     #nhac-ov .s{font-size:.9rem;color:#d89ab6;letter-spacing:.5px}
+    #nhac-yt-box{position:fixed;left:-300px;top:0;width:200px;z-index:9998}
+    #nhac-yt-box iframe{display:block;width:200px;height:200px;border:0;border-radius:12px;background:#000}
+    #nhac-yt-box .cap{display:none;margin-bottom:6px;text-align:center;font:600 13px "Segoe UI",Arial,sans-serif;
+      color:#ffe3ec;text-shadow:0 1px 6px #000}
+    #nhac-yt-box.vis{left:auto;top:auto;right:max(16px,env(safe-area-inset-right,0px));
+      bottom:calc(70px + env(safe-area-inset-bottom,0px));box-shadow:0 0 24px rgba(255,45,107,.5);border-radius:12px}
+    #nhac-yt-box.vis .cap{display:block}
     @keyframes nhacSpin{to{transform:rotate(360deg)}}
     @keyframes nhacBeat{0%,100%{transform:scale(1)}14%{transform:scale(1.15)}28%{transform:scale(1)}42%{transform:scale(1.1)}70%{transform:scale(1)}}
     @media (prefers-reduced-motion:reduce){#nhac-btn.on .ic,#nhac-ov .h{animation:none}}
@@ -58,24 +65,34 @@
     tx.textContent = isOn ? 'Tắt nhạc' : 'Bật nhạc';
     btn.setAttribute('aria-pressed', String(isOn));
   }
-  function setOn(v) { isOn = v; paint(); }
+  function setOn(v) {
+    isOn = v; paint();
+    if (v) hideFallback();
+  }
+
+  // Nếu Chrome chặn phát tự động, hiện khung nhạc nhỏ để người xem bấm ▶ trực tiếp
+  function ytBox() { return document.getElementById('nhac-yt-box'); }
+  function showFallback() { const b = ytBox(); if (b && !isOn) b.classList.add('vis'); }
+  function hideFallback() { const b = ytBox(); if (b) b.classList.remove('vis'); }
+  function checkSoon() { setTimeout(() => { if (wantPlay && !isOn) showFallback(); }, 2000); }
 
   function fail() {           // không có nhạc: bỏ hết phần giao diện nhạc
     btn.remove();
     ov.remove();
+    const b = ytBox(); if (b) b.remove();
   }
 
   function ready(p) {
     player = p;
     btn.classList.add('show');
     paint();
-    if (wantPlay) p.play().catch(() => {});
+    if (wantPlay) { p.play().catch(() => {}); checkSoon(); }
   }
 
   // Chạm vào màn hình mở đầu: bật nhạc ngay trong cú chạm (để trình duyệt cho phép)
   ov.addEventListener('click', () => {
     wantPlay = true;
-    if (player) player.play().catch(() => {});
+    if (player) { player.play().catch(() => {}); checkSoon(); }
     ov.classList.add('gone');
     setTimeout(() => ov.remove(), 700);
   });
@@ -84,7 +101,7 @@
     e.stopPropagation();
     if (!player) return;
     if (isOn) { wantPlay = false; player.pause(); }
-    else { wantPlay = true; player.play().catch(() => {}); }
+    else { wantPlay = true; player.play().catch(() => {}); checkSoon(); }
   });
 
   // ---- Nguồn nhạc: mp3 ----
@@ -105,16 +122,21 @@
 
   // ---- Nguồn nhạc: YouTube ----
   function useYouTube() {
-    // Player YouTube cần tối thiểu 200x200; đặt ngoài màn hình (không ẩn bằng display/opacity)
+    // Player YouTube cần tối thiểu 200x200; đặt ngoài màn hình (không ẩn bằng display/opacity).
+    // Tự tạo iframe với allow="autoplay" để Chrome cho phép phát.
+    const id = encodeURIComponent(CONFIG.youtube);
+    let src = `https://www.youtube.com/embed/${id}?enablejsapi=1&playsinline=1&loop=1&playlist=${id}&rel=0`;
+    if (/^https?:$/.test(location.protocol)) src += '&origin=' + encodeURIComponent(location.origin);
     const holder = document.createElement('div');
-    holder.style.cssText = 'position:fixed;width:200px;height:200px;left:-260px;top:0;pointer-events:none';
-    holder.innerHTML = '<div id="nhac-yt"></div>';
+    holder.id = 'nhac-yt-box';
+    holder.innerHTML = '<div class="cap">Bấm ▶ để nghe nhạc</div>' +
+      `<iframe id="nhac-yt" title="Nhạc nền" width="200" height="200" src="${src}" ` +
+      'allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>';
     document.body.appendChild(holder);
     window.onYouTubeIframeAPIReady = () => {
       const yt = new YT.Player('nhac-yt', {
-        width: 200, height: 200, videoId: CONFIG.youtube,
-        playerVars: { loop: 1, playlist: CONFIG.youtube, playsinline: 1, controls: 0, disablekb: 1, rel: 0 },
         events: {
+          onAutoplayBlocked: showFallback,
           onReady: () => {
             yt.setVolume(Math.round(CONFIG.volume * 100));
             ready({
