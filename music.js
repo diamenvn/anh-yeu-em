@@ -6,7 +6,7 @@
 
   const CONFIG = {
     mp3: 'nhac.mp3',      // đường dẫn file nhạc
-    youtube: '',          // hoặc mã video YouTube, ví dụ 'dQw4w9WgXcQ' (để trống nếu dùng mp3)
+    youtube: 'GSIkPUP1PoE', // hoặc mã video YouTube, ví dụ 'dQw4w9WgXcQ' (để trống nếu dùng mp3)
     volume: 0.7
   };
 
@@ -53,12 +53,12 @@
     paint();
   }
 
-  function ready(p) {
+  function ready(p, tryAuto = true) {
     player = p;
     btn.classList.add('show');
     paint();
     // thử phát ngay; trình duyệt thường chặn đến khi người xem chạm vào trang
-    p.play().then(() => setOn(true), () => {});
+    if (tryAuto) p.play().then(() => setOn(true), () => {});
   }
 
   // ---- Nguồn nhạc: mp3 ----
@@ -91,10 +91,15 @@
         events: {
           onReady: () => {
             yt.setVolume(Math.round(CONFIG.volume * 100));
+            // YouTube không cho tự phát: đợi người xem chạm, trạng thái nút theo onStateChange
             ready({
-              play: () => { yt.playVideo(); setOn(true); return Promise.resolve(); },
-              pause: () => { yt.pauseVideo(); setOn(false); }
-            });
+              play: () => { yt.playVideo(); return Promise.resolve(); },
+              pause: () => { yt.pauseVideo(); }
+            }, false);
+          },
+          onStateChange: e => {
+            if (e.data === 1) setOn(true);                       // đang phát
+            else if (e.data === 2 || e.data === 0) setOn(false); // tạm dừng / hết bài
           },
           onError: () => btn.remove()
         }
