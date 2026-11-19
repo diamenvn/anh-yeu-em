@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Câu chuyện của chúng mình ❤</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #12040f;
+    --bg2: #1d0817;
+    --card: #2a0f22;
+    --line: #5a2146;
+    --pink: #ff2d6b;
+    --pink2: #ff6b9a;
+    --soft: #ffd6e5;
+    --text: #ffe9f1;
+    --muted: #d29ab4;
+    --paper: #fff3ea;
+    --ink: #4a2433;
+    --script: "Dancing Script", "Brush Script MT", "Segoe Script", cursive;
+    --ui: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--ui); color: var(--text); line-height: 1.65;
+    background: radial-gradient(circle at 50% 0%, #3a0a24 0%, var(--bg) 55%, #08020a 100%) fixed;
+    overflow-x: hidden;
+  }
+  canvas.layer { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #bg { z-index: 0; }
+  #fx { z-index: 50; }
+  main { position: relative; z-index: 1; }
+  .wrap { width: 100%; max-width: 760px; margin: 0 auto; padding: 0 20px; }
+  section { padding: 76px 0; }
+  h2 {
+    font-family: var(--script); font-size: clamp(2.1rem, 8vw, 3rem); text-align: center;
+    color: #fff; text-shadow: 0 0 22px rgba(255, 45, 107, .6); margin-bottom: 8px; line-height: 1.2;
+  }
+  h2::first-letter { text-transform: uppercase; }
+  .lead { text-align: center; color: var(--muted); margin-bottom: 34px; }
+
+  /* hiện dần khi cuộn tới (chỉ khi có JS) */
+  .js .rv { opacity: 0; transform: translateY(26px); transition: opacity .8s ease, transform .8s ease; }
+  .js .rv.in { opacity: 1; transform: none; }
+
+  .preview {
+    position: sticky; top: 0; z-index: 20; text-align: center; padding: 8px 14px;
+    background: rgba(255, 214, 229, .96); color: #5a1535; font-size: .82rem; font-weight: 600;
+  }
+
+  /* 1. Mở đầu */
+  .hero { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px; }
+  .hero svg { width: min(34vw, 150px); filter: drop-shadow(0 0 24px rgba(255, 45, 107, .8)); animation: beat 1.3s ease-in-out infinite; }
+  .hero h1 { font-family: var(--script); font-size: clamp(2.6rem, 12vw, 4.6rem); margin-top: 22px; line-height: 1.15; text-shadow: 0 0 26px rgba(255, 45, 107, .7); }
+  .hero p { color: var(--soft); margin-top: 10px; letter-spacing: .5px; }
+  .down { margin-top: 44px; color: var(--muted); font-size: .85rem; animation: bob 2s ease-in-out infinite; }
+  @keyframes beat { 0%,100%{transform:scale(1)} 14%{transform:scale(1.13)} 28%{transform:scale(1)} 42%{transform:scale(1.08)} 70%{transform:scale(1)} }
+  @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
+
+  /* 2. Đồng hồ */
+  .clock { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 520px; margin: 0 auto; }
+  .clock div { background: rgba(42, 15, 34, .85); border: 1px solid var(--line); border-radius: 14px; padding: 16px 4px; text-align: center; }
+  .clock b { display: block; font-size: clamp(1.6rem, 8vw, 2.4rem); color: var(--pink2); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .clock span { font-size: .78rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .since { text-align: center; color: var(--muted); margin-top: 18px; font-size: .92rem; }
+
+  /* 3. Dòng thời gian */
+  .timeline { list-style: none; position: relative; padding-left: 34px; }
+  .timeline::before { content: ""; position: absolute; left: 11px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(var(--pink), var(--line)); }
+  .timeline li { position: relative; margin-bottom: 30px; }
+  .dot { position: absolute; left: -31px; top: 8px; width: 16px; height: 16px; border-radius: 50%; background: var(--pink); box-shadow: 0 0 14px var(--pink); }
+  .tcard { background: rgba(42, 15, 34, .88); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+  .tcard time { display: block; color: var(--pink2); font-size: .82rem; font-weight: 600; letter-spacing: .5px; margin-top: 12px; }
+  .tcard h3 { font-size: 1.1rem; margin: 2px 0 4px; }
+  .tcard p { color: var(--soft); font-size: .95rem; }
+  .ph { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 10px; }
+  .ph.empty { display: flex; align-items: center; justify-content: center; font-size: 2.4rem; color: rgba(255, 107, 154, .55);
+    background: linear-gradient(135deg, #3d1430, #2a0f22); border: 1px dashed var(--line); }
+
+  /* 4. Thư tình */
+  .paper { background: var(--paper); color: var(--ink); border-radius: 6px; padding: clamp(22px, 6vw, 40px);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .5), 0 0 0 1px rgba(255, 255, 255, .5) inset; transform: rotate(-.6deg); min-height: 280px; }
+  .paper p { font-family: var(--script); font-size: clamp(1.3rem, 5vw, 1.7rem); line-height: 1.5; margin-bottom: 12px; }
+  .typing p:last-child::after { content: "|"; margin-left: 2px; animation: blink .8s steps(1) infinite; }
+  .sig { font-family: var(--script); font-size: 1.7rem; text-align: right; color: #b3003c; margin-top: 16px; opacity: 0; transition: opacity 1s; }
+  .sig.in { opacity: 1; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* 5. Lý do */
+  .reasons { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .flip { perspective: 800px; border: 0; background: none; cursor: pointer; aspect-ratio: 5 / 4; font: inherit; color: inherit; }
+  .flip .in2 { position: relative; width: 100%; height: 100%; transition: transform .7s; transform-style: preserve-3d; }
+  .flip.on .in2 { transform: rotateY(180deg); }
+  .flip .f, .flip .b { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; text-align: center; }
+  .flip .f { background: linear-gradient(145deg, #4a1238, #2a0f22); border: 1px solid var(--line); }
+  .flip .f i { font-style: normal; font-size: 1.8rem; color: var(--pink); }
+  .flip .f small { color: var(--muted); font-size: .78rem; margin-top: 2px; }
+  .flip .b { background: linear-gradient(145deg, #ff6b9a, #ff2d6b); transform: rotateY(180deg); font-weight: 600; font-size: .92rem; color: #fff; }
+  .flip:focus-visible { outline: 2px solid var(--soft); outline-offset: 3px; border-radius: 14px; }
+  .count { text-align: center; color: var(--muted); margin-top: 16px; font-size: .9rem; }
+
+  /* 6. Album */
+  .album { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  @media (min-width: 640px) { .album { grid-template-columns: repeat(3, 1fr); } }
+  .pol { background: var(--paper); padding: 10px 10px 8px; border-radius: 4px; box-shadow: 0 10px 28px rgba(0, 0, 0, .5);
+    transform: rotate(var(--r, 0deg)); transition: transform .25s; cursor: pointer; border: 0; text-align: center; font: inherit; color: var(--ink); }
+  .pol:hover, .pol:focus-visible { transform: rotate(0deg) scale(1.04); outline: none; }
+  .pol .ph { aspect-ratio: 1 / 1; border-radius: 2px; }
+  .pol .ph.empty { background: linear-gradient(135deg, #ffe3ec, #ffc2d6); border: 0; color: rgba(255, 45, 107, .5); }
+  .pol span { display: block; font-family: var(--script); font-size: 1.1rem; margin-top: 6px; line-height: 1.25; }
+  .lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(8, 2, 10, .92); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 12px; padding: 20px; cursor: pointer; }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 76vh; border-radius: 6px; }
+  .lightbox p { font-family: var(--script); font-size: 1.5rem; }
+
+  /* 7. Câu hỏi */
+  .ask { text-align: center; background: rgba(42, 15, 34, .85); border: 1px solid var(--line); border-radius: 22px; padding: 40px 20px 30px; }
+  .ask h2 { margin-bottom: 18px; }
+  .arena { position: relative; height: 230px; display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; }
+  .btn { font: 600 1rem var(--ui); border: 0; border-radius: 999px; padding: 14px 30px; cursor: pointer; color: #fff; transition: transform .2s; }
+  .yes { background: linear-gradient(135deg, #ff6b9a, #ff2d6b); box-shadow: 0 0 26px rgba(255, 45, 107, .6); }
+  .no { background: #4a2a3d; border: 1px solid var(--line); white-space: nowrap; }
+  .btn:focus-visible { outline: 2px solid var(--soft); outline-offset: 3px; }
+  .done { display: none; }
+  .done.show { display: block; animation: pop .7s ease; }
+  .done .big { font-family: var(--script); font-size: clamp(2.2rem, 9vw, 3.4rem); line-height: 1.2; text-shadow: 0 0 26px rgba(255, 45, 107, .7); }
+  .done p { color: var(--soft); margin-top: 10px; }
+  @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  footer { text-align: center; color: var(--muted); font-size: .88rem; padding: 10px 20px 60px; }
+
+  .lightbox[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .hero svg, .down { animation: none; }
+    .js .rv { opacity: 1; transform: none; transition: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg" class="layer"></canvas>
+<canvas id="fx" class="layer"></canvas>
+
+<div class="preview" id="preview" hidden>Bản xem thử với nội dung mẫu. Sửa file data.js để thay bằng câu chuyện thật.</div>
+
+<main>
+  <!-- 1. Mở đầu -->
+  <header class="hero">
+    <svg viewBox="0 0 512 460" aria-hidden="true">
+      <defs><linearGradient id="hg" x1="0" y1="0" x2=".8" y2="1">
+        <stop offset="0" stop-color="#ff6b9a"/><stop offset=".55" stop-color="#ff1f5a"/><stop offset="1" stop-color="#b3003c"/>
+      </linearGradient></defs>
+      <path fill="url(#hg)" d="M256 440 C 60 300, 0 200, 0 130 C 0 55, 55 5, 125 5 C 178 5, 228 35, 256 85 C 284 35, 334 5, 387 5 C 457 5, 512 55, 512 130 C 512 200, 452 300, 256 440 Z"/>
+    </svg>
+    <h1>Gửi <span data-em></span></h1>
+    <p>Câu chuyện của chúng mình</p>
+    <div class="down">Cuộn xuống nhé ↓</div>
+  </header>
+
+  <!-- 2. Đồng hồ -->
+  <section>
+    <div class="wrap rv">
+      <h2><span data-anh></span> và <span data-em></span> đã yêu nhau</h2>
+      <p class="lead">Và từng giây trôi qua, <span data-anh></span> vẫn thấy mình thật may mắn</p>
+      <div class="clock" role="timer" aria-label="Thời gian chúng mình yêu nhau">
+        <div><b id="c-d">0</b><span>ngày</span></div>
+        <div><b id="c-h">0</b><span>giờ</span></div>
+        <div><b id="c-m">0</b><span>phút</span></div>
+        <div><b id="c-s">0</b><span>giây</span></div>
+      </div>
+      <p class="since">kể từ ngày <span id="since"></span></p>
+    </div>
+  </section>
+
+  <!-- 3. Dòng thời gian -->
+  <section>
+    <div class="wrap">
+      <h2 class="rv">Những ngày đáng nhớ</h2>
+      <p class="lead rv">Mỗi mốc nhỏ là một trang trong câu chuyện của mình</p>
+      <ol class="timeline" id="tl"></ol>
+    </div>
+  </section>
+
+  <!-- 4. Thư tình -->
+  <section>
+    <div class="wrap">
+      <h2 class="rv">Lá thư nhỏ</h2>
+      <p class="lead rv">Từng chữ này là <span data-anh></span> viết cho <span data-em></span></p>
+      <div class="paper rv" id="paper">
+        <div id="thu"></div>
+        <div class="sig" id="sig"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Lý do -->
+  <section>
+    <div class="wrap">
+      <h2 class="rv">Lý do <span data-anh></span> yêu <span data-em></span></h2>
+      <p class="lead rv">Chạm vào từng thẻ để lật ra nhé</p>
+      <div class="reasons rv" id="reasons"></div>
+      <p class="count" id="count"></p>
+    </div>
+  </section>
+
+  <!-- 6. Album -->
+  <section>
+    <div class="wrap">
+      <h2 class="rv">Album của mình</h2>
+      <p class="lead rv">Những khoảnh khắc <span data-anh></span> muốn giữ mãi</p>
+      <div class="album rv" id="album"></div>
+    </div>
+  </section>
+
+  <!-- 7. Câu hỏi -->
+  <section>
+    <div class="wrap">
+      <div class="ask rv">
+        <div id="hoi">
+          <h2><span data-em></span> ơi, làm người yêu <span data-anh></span> mãi mãi nhé?</h2>
+          <div class="arena" id="arena">
+            <button class="btn yes" id="yes" type="button">Có chứ ❤</button>
+            <button class="btn no" id="no" type="button">Không</button>
+          </div>
+        </div>
+        <div class="done" id="done">
+          <div class="big">Hứa nha!</div>
+          <p><span data-anh></span> yêu <span data-em></span> nhiều lắm, mãi mãi luôn ❤</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Làm bằng cả trái tim của <span data-anh></span> ❤</footer>
+</main>
+
+<div class="lightbox" id="lb" role="dialog" aria-modal="true" aria-label="Xem ảnh" hidden>
+  <img id="lb-img" alt="">
+  <p id="lb-cap"></p>
+</div>
+
+<script src="data.js"></script>
+<script>
+(() => {
+  const D = window.TINH_YEU;
+  const $ = s => document.querySelector(s);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  document.documentElement.classList.add('js');
+
+  // ---- Điền tên xưng hô ----
+  document.querySelectorAll('[data-anh]').forEach(e => e.textContent = D.anh);
+  document.querySelectorAll('[data-em]').forEach(e => e.textContent = D.em);
+  if (!D.daDienThongTin) $('#preview').hidden = false;
+
+  // ---- 2. Đồng hồ yêu nhau ----
+  const start = new Date(D.ngayYeu + 'T00:00:00');
+  $('#since').textContent = start.toLocaleDateString('vi-VN');
+  function tick() {
+    const s = Math.max(0, Math.floor((Date.now() - start) / 1000));
+    $('#c-d').textContent = Math.floor(s / 86400).toLocaleString('vi-VN');
+    $('#c-h').textContent = Math.floor(s % 86400 / 3600);
+    $('#c-m').textContent = Math.floor(s % 3600 / 60);
+    $('#c-s').textContent = s % 60;
+  }
+  tick(); setInterval(tick, 1000);
+
+  // ---- 3. Dòng thời gian ----
+  const photo = (src, alt) => src
+    ? `<img class="ph" src="${esc(src)}" alt="${esc(alt)}" loading="lazy">`
+    : `<div class="ph empty" aria-hidden="true">♥</div>`;
+  $('#tl').innerHTML = D.kyNiem.map(k =>
+    `<li class="rv"><span class="dot"></span><div class="tcard">${photo(k.anh, k.tieuDe)}` +
+    `<time>${esc(k.ngay)}</time><h3>${esc(k.tieuDe)}</h3><p>${esc(k.noiDung)}</p></div></li>`).join('');
+
+  // ---- 4. Thư tình: gõ từng chữ khi cuộn tới ----
+  const thu = $('#thu'), sig = $('#sig');
+  sig.textContent = 'Mãi yêu ' + D.em + ', ' + D.anh + ' ❤';
+  let typed = false;
+  async function typeLetter() {
+    if (typed) return; typed = true;
+    if (reduce) { thu.innerHTML = D.thu.map(p => `<p>${esc(p)}</p>`).join(''); sig.classList.add('in'); return; }
+    thu.classList.add('typing');
+    for (const para of D.thu) {
+      const p = document.createElement('p'); thu.appendChild(p);
+      for (const ch of para) { p.textContent += ch; await sleep(28); }
+      await sleep(350);
+    }
+    thu.classList.remove('typing');
+    sig.classList.add('in');
+  }
+
+  // ---- 5. Thẻ lý do ----
+  const rs = $('#reasons'); let opened = 0;
+  rs.innerHTML = D.lyDo.map((t, i) =>
+    `<button type="button" class="flip" aria-pressed="false" aria-label="Lý do số ${i + 1}">` +
+    `<div class="in2"><div class="f"><i>♥</i><small>Lý do ${i + 1}</small></div><div class="b">${esc(t)}</div></div></button>`).join('');
+  const cnt = $('#count');
+  const paintCount = () => cnt.textContent = `${D.em} đã mở ${opened}/${D.lyDo.length} lý do` + (opened === D.lyDo.length ? ', và còn nhiều lý do nữa ❤' : '');
+  paintCount();
+  rs.addEventListener('click', e => {
+    const b = e.target.closest('.flip'); if (!b) return;
+    const was = b.classList.contains('on');
+    b.classList.toggle('on', !was); b.setAttribute('aria-pressed', String(!was));
+    if (!b.dataset.seen) { b.dataset.seen = 1; opened++; paintCount(); fx.burst(e.clientX, e.clientY, 8); }
+  });
+
+  // ---- 6. Album + xem ảnh lớn ----
+  const lb = $('#lb');
+  $('#album').innerHTML = D.album.map((a, i) =>
+    `<button type="button" class="pol" style="--r:${[-3, 2, -1.5, 3, -2.5, 1.5][i % 6]}deg" data-i="${i}">` +
+    `${photo(a.src, a.chuThich)}<span>${esc(a.chuThich)}</span></button>`).join('');
+  $('#album').addEventListener('click', e => {
+    const b = e.target.closest('.pol'); if (!b) return;
+    const a = D.album[+b.dataset.i];
+    if (!a.src) { fx.burst(e.clientX, e.clientY, 10); return; }
+    $('#lb-img').src = a.src; $('#lb-img').alt = a.chuThich; $('#lb-cap').textContent = a.chuThich;
+    lb.hidden = false; lb.classList.add('open');
+  });
+  const closeLb = () => { lb.classList.remove('open'); lb.hidden = true; };
+  lb.addEventListener('click', closeLb);
+  addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
+
+  // ---- 7. Câu hỏi: nút "Không" chạy trốn ----
+  const arena = $('#arena'), yes = $('#yes'), no = $('#no');
+  const lines = ['Không', D.em + ' chắc chưa?', 'Nghĩ lại đi mà 🥺', D.anh + ' buồn đó nha', 'Bấm "Có" đi mà ❤', 'Không thoát được đâu 😆'];
+  let tries = 0, lastDodge = 0;
+  function dodge(e) {
+    if (e) e.preventDefault();
+    const now = Date.now(); if (now - lastDodge < 250) return; lastDodge = now;
+    tries++;
+    no.textContent = lines[Math.min(tries, lines.length - 1)];
+    const sc = Math.min(1 + tries * 0.08, 1.3);
+    yes.style.transform = `scale(${sc})`;
+    no.style.position = 'absolute';
+    const aw = arena.clientWidth, ah = arena.clientHeight;
+    const w = no.offsetWidth, h = no.offsetHeight;
+    // vùng nút "Có" sau khi phóng to xong (toạ độ trong khung), cộng thêm khoảng đệm
+    const yw = yes.offsetWidth * sc, yh = yes.offsetHeight * sc, p = 10;
+    const yL = yes.offsetLeft + yes.offsetWidth / 2 - yw / 2 - p, yT = yes.offsetTop + yes.offsetHeight / 2 - yh / 2 - p;
+    const yR = yL + yw + 2 * p, yB = yT + yh + 2 * p;
+    let x = 0, t = 0, best = -1;
+    for (let i = 0; i < 40; i++) {       // chọn chỗ không đè lên nút "Có"
+      const cx = Math.random() * Math.max(0, aw - w), cy = Math.random() * Math.max(0, ah - h);
+      const overlap = cx < yR && cx + w > yL && cy < yB && cy + h > yT;
+      const dist = Math.hypot(cx + w / 2 - (yL + yR) / 2, cy + h / 2 - (yT + yB) / 2);
+      if (!overlap) { x = cx; t = cy; best = 1; break; }
+      if (dist > best) { best = dist; x = cx; t = cy; }
+    }
+    no.style.left = x + 'px';
+    no.style.top = t + 'px';
+  }
+  no.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') dodge(e); });
+  no.addEventListener('pointerdown', dodge);
+  no.addEventListener('click', dodge);
+  yes.addEventListener('click', () => {
+    $('#hoi').hidden = true; $('#done').classList.add('show');
+    let n = 0;
+    const id = setInterval(() => {
+      fx.burst(innerWidth * (0.15 + Math.random() * 0.7), innerHeight * (0.2 + Math.random() * 0.5), 34);
+      if (++n >= 10) clearInterval(id);
+    }, 330);
+  });
+
+  // ---- Hiện dần khi cuộn ----
+  const rvs = document.querySelectorAll('.rv');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(es => es.forEach(en => {
+      if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); if (en.target.id === 'paper') typeLetter(); }
+    }), { threshold: 0.2 });
+    rvs.forEach(r => io.observe(r));
+  } else { rvs.forEach(r => r.classList.add('in')); typeLetter(); }
+
+  // ---- Nền: tim bay + pháo tim ----
+  const bg = $('#bg'), fxc = $('#fx'), g = bg.getContext('2d'), f = fxc.getContext('2d');
+  let W, H;
+  const cols = ['#ff2d6b', '#ff6b9a', '#ff9ebc', '#ffc2d6', '#ff4d88', '#ffffff'];
+  function size() {
+    const dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight;
+    for (const [c, x] of [[bg, g], [fxc, f]]) { c.width = W * dpr; c.height = H * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0); }
+  }
+  addEventListener('resize', size); size();
+  function heart(x, px, py, s, color, alpha, rot) {
+    x.save(); x.translate(px, py); x.rotate(rot); x.scale(s / 32, s / 32);
+    x.globalAlpha = alpha; x.fillStyle = color; x.beginPath(); x.moveTo(0, 10);
+    x.bezierCurveTo(-24, -6, -14, -26, 0, -12); x.bezierCurveTo(14, -26, 24, -6, 0, 10); x.fill(); x.restore();
+  }
+  const floaters = [], sparks = [];
+  function floater(y) {
+    floaters.push({ x: Math.random() * W, y: y ?? H + 20, s: 8 + Math.random() * 16, vy: .3 + Math.random() * .7,
+      sw: Math.random() * 6.28, sp: .01 + Math.random() * .02, c: cols[(Math.random() * cols.length) | 0], a: .15 + Math.random() * .3 });
+  }
+  for (let i = 0; i < 16; i++) floater(Math.random() * H);
+  const fx = { burst(x, y, n) {
+    for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, v = 2 + Math.random() * 6;
+      sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, s: 8 + Math.random() * 14, c: cols[(Math.random() * cols.length) | 0], life: 1, r: Math.random() * 2 - 1 }); }
+  } };
+  function loop() {
+    g.clearRect(0, 0, W, H); f.clearRect(0, 0, W, H);
+    if (!reduce) {
+      if (Math.random() < .05) floater();
+      for (let i = floaters.length - 1; i >= 0; i--) {
+        const h = floaters[i]; h.sw += h.sp; h.y -= h.vy; h.x += Math.sin(h.sw) * .4;
+        if (h.y < -30) { floaters.splice(i, 1); continue; }
+        heart(g, h.x, h.y, h.s, h.c, h.a, Math.sin(h.sw) * .2);
+      }
+    }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const p = sparks[i]; p.x += p.vx; p.y += p.vy; p.vy += .12; p.vx *= .99; p.life -= .012;
+      if (p.life <= 0) { sparks.splice(i, 1); continue; }
+      heart(f, p.x, p.y, p.s, p.c, p.life, p.r);
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>
+<script src="music.js"></script>
+</body>
+</html>
